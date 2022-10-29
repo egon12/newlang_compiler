@@ -1,6 +1,6 @@
 {
-  "name": "compiler",
-  "version": "1.0.0",
+  "name": "newlang_compiler",
+  "version": "0.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
