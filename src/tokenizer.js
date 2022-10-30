@@ -1,8 +1,9 @@
 const number = 'number';
 const keyword = 'keyword';
-const indentifier = 'identifier';
+const identifier = 'identifier';
 const operator = 'operator';
 const string = 'string';
+const equal = 'equal';
 
 class Token {
 	constructor() {
@@ -16,55 +17,324 @@ class Token {
 	get token() {
 		return this._token;
 	}
+
+	start(index, line, column) {
+		this._start = { index, line, column };
+	}
+
+	end(index, line, column) {
+		this._end = { index, line, column };
+		if (this.type === identifier && isKeyword(this._token)) {
+			this.type = keyword;
+		}
+	}
+
+	isComplete() {
+		return this._start && this._end;
+	}
+
+	isStarting() {
+		return this._start && !this._end;
+	}
 }
 
 
-
 class Tokenizer {
+	constructor() {
+		this._tokenList = [];
+		this._index = 0;
+	}
 
 	parse(input) {
-		const tokenList = [];
-		const inputArray = input.split(' ');
-		for (let i = 0; i < inputArray.length; i++) {
-			const token = new Token();
-			token.type = this.getTokenType(inputArray[i]);
-			tokenList.push(token);
+		this._index = 0;
+		this._tokenList = [];
+		this._line = 1;
+		this._column = 1;
+
+		this._token = new Token();
+
+		while (this._index < input.length) {
+			const char = input[this._index];
+
+			if (char === '\n') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._line++;
+				this._column = 1;
+				this._index++;
+				continue;
+			}
+
+			if (char === ' ' || char === '\t') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._index++;
+				this._column++;
+				continue;
+			}
+
+			if (isOperator(char)) {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = operator;
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+
+				this._column = 1;
+				this._index++;
+
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (isLetter(char)) {
+				if (this._token.isStarting()) {
+					this._token.token += char;
+				} else {
+					this._token.type = identifier;
+					this._token.start(this._index, this._line, this._column);
+					this._token.token = char;
+				}
+				this._column++;
+				this._index++;
+				continue;
+			}
+
+			if (isNumber(char)) {
+				if (this._token.isStarting()) {
+					this._token.token += char;
+				} else {
+					this._token.type = number;
+					this._token.start(this._index, this._line, this._column);
+					this._token.token = char;
+				}
+				this._column++;
+				this._index++;
+				continue;
+			}
+
+
+			if (char === '=') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = equal;
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+
+			if (char === '(') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'openParen';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === ')') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'closeParen';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === '{') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'openBrace';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === '}') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'closeBrace';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+
+			if (char === ':') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'colon';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === ':') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'colon';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+
+			if (char === ';') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'semicolon';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === ',') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'comma';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === '.') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'dot';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+				this._column++;
+				this._index++;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+			if (char === '"') {
+				if (this._token.isStarting()) {
+					this._token.end(this._index, this._line, this._column);
+					this._tokenList.push(this._token);
+					this._token = new Token();
+				}
+				this._token.type = 'string';
+				this._token.start(this._index, this._line, this._column);
+				this._token.token = char;
+
+				this._column++;
+				this._index++;
+				let newChar = input[this._index];
+				while(newChar !== '"' && this._index < input.length) {
+					this._column++;
+					this._index++;
+					newChar = input[this._index];
+					this._token.token += newChar;
+				}
+				this._token.token += newChar;
+				this._token.end(this._index, this._line, this._column);
+				this._tokenList.push(this._token);
+				this._token = new Token();
+				continue;
+			}
+
+
+			throw new Error('Invalid character: ' + char + '('+ char.charCodeAt(0).toString(16) +') at ' + this._index + ' on line ' + this._line + ' column ' + this._column);
 		}
-		return tokenList;
-	}
 
-	getTokenType(input) {
-		if (this.isNumber(input)) {
-			return number;
-		} else if (this.isKeyword(input)) {
-			return keyword;
-		} else if (this.isIdentifier(input)) {
-			return indentifier;
-		} else if (this.isOperator(input)) {
-			return operator;
-		} else if (this.isString(input)) {
-			return string;
+		if (this._token.isStarting()) {
+			this._token.end(this._index, this._line, this._column);
+			this._tokenList.push(this._token);
+			this._token = new Token();
 		}
-	}
 
-	isNumber(input) {
-		return !isNaN(input);
-	}
-
-	isKeyword(input) {
-		return input === 'var';
-	}
-
-	isIdentifier(input) {
-		return input.length > 1;
-	}
-
-	isOperator(input) {
-		return isOperator(input);
-	}
-
-	isString(input) {
-		return input.startsWith('"') && input.endsWith('"');
+		return this._tokenList;
 	}
 }
 
@@ -96,7 +366,7 @@ function isOperator(char) {
 }
 
 function isKeyword(char) {
-	return char === 'var';
+	return char === 'var' || char === 'fn';
 }
 
 function isString(char) {

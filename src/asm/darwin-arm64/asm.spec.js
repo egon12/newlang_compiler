@@ -23,7 +23,7 @@ let node = [
 					namespace: 'main',
 					name: 'plusOne',
 					parameters: [
-						{ type: 'Number', value: 4 },
+						{ type: 'Number', value: "4" },
 					],
 				}
 			},
@@ -70,7 +70,7 @@ let node = [
 				value: {
 					type: 'MathExpression',
 					operator: '+',
-					left: { type: 'Number', value: 1 },
+					left: { type: 'Number', value: "1" },
 					right: { type: 'Variable', id: 'x' },
 				}
 			}
