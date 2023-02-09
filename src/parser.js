@@ -1,3 +1,7 @@
+const ArithmaticParser = require('./arithmetic')
+
+const arithmaticParser = new ArithmaticParser()
+
 class Parser {
 
 	parse(tokenList) {
@@ -71,7 +75,6 @@ class Parser {
 	parseVariableDefinition(tokenList) {
 		const name = tokenList.shift();
 		const equal = tokenList.shift();
-		const val = tokenList.shift();
 
 		if (name.type !== 'identifier') {
 			throw new Error('Expected identifier');
@@ -81,15 +84,46 @@ class Parser {
 			throw new Error('Expected equal sign');
 		}
 
+		if (tokenList.length == 0) {
+			throw new Error('Expected value after =');
+		}
+
+		// get token until 
+		let index = 0;
+		let lastIndex = 0;
+		while(true) {
+			if (index >= tokenList.length || 
+				tokenList[index].type === 'semicolon' || 
+				tokenList[index].type === '\n'
+			) {
+				lastIndex = index;
+				break;
+			}
+			index++
+		}
+
+		let useOperator = false;
+		for (let i = 0; i<lastIndex; i++) {
+			const tok = tokenList[i];
+			if (tok.type == 'operator') {
+				useOperator = true;
+				break;
+			}
+		}
 
 		let value;
-		switch (val.type) {
-			case 'number':
-				value = { type: 'Number', value: val.token };
-				break;
-			default:
-				throw new Error('Invalid value type: ' + val.type);
+		if (useOperator) {
+			value = arithmaticParser.parse(tokenList.splice(0, lastIndex))
+		} else {
+			const val = tokenList.shift();
+			switch (val.type) {
+				case 'number':
+					value = { type: 'Number', value: val.token };
+					break;
+				default:
+					throw new Error('Invalid value type: ' + val.type);
 
+			}
 		}
 
 		const ast = {
