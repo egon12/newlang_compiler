@@ -1,92 +1,12 @@
-let node = [
-	{
-		type: 'FunctionDefinition',
-		namespace: 'main',
-		name: 'main',
-		parameters: [],
-		body: [
-			{
-				type: 'VariableDefinition',
-				name: 'a',
-				value: {
-					type: 'CallExpression',
-					namespace: 'main',
-					name: 'plusOne',
-					parameters: [
-						{ type: 'Number', value: 4 },
-					],
-				}
-			},
-			{
-				type: 'CallStatement',
-				value: {
-					type: 'CallExpression',
-					namespace: '',
-					name: 'printint', // using stdio
-					parameters: [
-						{ type: 'Variable', id: 'a' },
-					],
-				}
-			},
-			{
-				type: 'CallStatement',
-				value: {
-					type: 'CallExpression',
-					namespace: '',
-					name: 'println', // using stdio
-					parameters: [],
-				}
-			},
-			{
-				type: 'ReturnStatement',
-				value: {
-					type: 'Number',
-					value: 0,
-				}
-			}
-		]
-	},
 
-	{
-		type: 'FunctionDefinition',
-		namespace: 'main',
-		name: 'plusOne',
-		parameters: [
-			{ name: 'x', typeName: { type: 'BuiltInType', name: 'int' } },
-		],
-		body: [
-			{
-				type: 'ReturnStatement',
-				value: {
-					type: 'MathExpression',
-					operator: '+',
-					left: { type: 'Number', value: 1 },
-					right: { type: 'Variable', id: 'x' },
-				}
-			}
-		]
-	},
-	{
-		type: 'FunctionDefinition',
-		namespace: 'main',
-		name: 'add',
-		parameters: [
-			{ name: 'a', typeName: { type: 'BuiltInType', name: 'int' } },
-			{ name: 'b', typeName: { type: 'BuiltInType', name: 'int' } },
-		],
-		body: [
-			{
-				type: 'ReturnStatement',
-				value: {
-					type: 'MathExpression',
-					operator: '+',
-					left: { type: 'Variable', id: 'a' },
-					right: { type: 'Variable', id: 'b' },
-				}
-			}
-		]
-	}
-]
+function isMathOperator(node) {
+	if (node.type === 'AddOperator') return true
+	if (node.type === 'SubOperator') return true
+	if (node.type === 'MulOperator') return true
+	if (node.type === 'DivOperator') return true
+	return false
+}
+
 
 function genFunctionDefinition(node) {
 	let result = ''
@@ -184,13 +104,13 @@ function genMathExpression(node, reg, stackVar) {
 	let result = ''
 	result += genExpression(node.left, 'x0', stackVar)
 	result += genExpression(node.right, 'x1', stackVar)
-	if (node.operator == '+') {
+	if (node.type == 'AddOperator') {
 		result += '\tadd x0, x0, x1\n'
 	}
-	if (node.operator == '-') {
+	if (node.type == 'SubOperator') {
 		result += '\tsub x0, x0, x1\n'
 	}
-	if (node.operator == '*') {
+	if (node.type == 'MulOperator') {
 		result += `\tmul ${reg}, x0, x1\n`
 	}
 
@@ -204,7 +124,7 @@ function genExpression(node, reg, stackVar) {
 	if (node.type == 'Number') {
 		return '\tmov ' + reg + ', #' + node.value + '\n'
 	}
-	if (node.type == 'MathExpression') {
+	if (isMathOperator(node)) {
 		return genMathExpression(node, reg, stackVar)
 	}
 	if (node.type == 'CallExpression') {

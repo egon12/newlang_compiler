@@ -68,8 +68,7 @@ let node = [
 			{
 				type: 'ReturnStatement',
 				value: {
-					type: 'MathExpression',
-					operator: '+',
+					type: 'AddOperator',
 					left: { type: 'Number', value: "1" },
 					right: { type: 'Variable', id: 'x' },
 				}
@@ -88,8 +87,7 @@ let node = [
 			{
 				type: 'ReturnStatement',
 				value: {
-					type: 'MathExpression',
-					operator: '+',
+					type: 'AddOperator',
 					left: { type: 'Variable', id: 'a' },
 					right: { type: 'Variable', id: 'b' },
 				}

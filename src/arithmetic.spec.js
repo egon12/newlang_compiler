@@ -1,6 +1,5 @@
 const Tokenizer = require('./tokenizer');
 const Parser = require('./parser');
-const ArithmaticParser = require('./arithmetic');
 const ArithmeticInterpreter = require('./arithmetic_interpreter');
 
 const intepreter = new ArithmeticInterpreter();
