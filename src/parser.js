@@ -1,24 +1,24 @@
 const ArithmaticParser = require('./arithmetic')
+const Token = require('./token_utils')
 
 const arithmaticParser = new ArithmaticParser()
 
 class Parser {
 
-	parse(tokenList) {
+	parse(tokens) {
 		let result = [];
 
-		if (tokenList.length === 0) {
+		if (tokens.length === 0) {
 			return result;
 		}
 
-
-		const token = tokenList.shift();
+		const token = tokens.shift();
 		if (token.type === 'keyword') {
 			if (token.token == 'var') {
-				result.push(this.parseVariableDefinition(tokenList))
+				result.push(this.parseVariableDefinition(tokens))
 			}
 			if (token.token == 'fn') {
-				result.push(this.parseFunctionDefinition(tokenList))
+				result.push(this.parseFunctionDefinition(tokens))
 			}
 		}
 		return result;
@@ -115,15 +115,7 @@ class Parser {
 		if (useOperator) {
 			value = arithmaticParser.parse(tokenList.splice(0, lastIndex))
 		} else {
-			const val = tokenList.shift();
-			switch (val.type) {
-				case 'number':
-					value = { type: 'Number', value: val.token };
-					break;
-				default:
-					throw new Error('Invalid value type: ' + val.type);
-
-			}
+			value = this.parseExpression(tokenList.splice(0, lastIndex))
 		}
 
 		const ast = {
@@ -132,6 +124,93 @@ class Parser {
 			value,
 		};
 		return ast;
+	}
+
+	parseCallStatement(first, tokens) {
+		const openParen = tokens.shift();
+		const args = Token.splice(tokens, 'closeParen');
+		const closeParen = tokens.shift();
+
+
+		let parameters = Token.split(args, 'comma')
+			//.map(arg => arg.token);
+
+		parameters = parameters.map(expr => this.parseExpression(expr));
+
+		return {
+			type: 'CallExpression',
+			name: first.token,
+			parameters
+		}
+	}
+
+	parseCallExpression(tokens) {
+		const name = tokens.shift().token;
+		const openParen = tokens.shift();
+		const rawArgs = Token.splice(tokens, 'closeParen');
+		const closeParen = tokens.shift();
+
+		const parameters = Token
+			.split(rawArgs, 'comma')
+			.map(arg => this.parseExpression(arg));
+
+		return {
+			type: 'CallExpression',
+			name,
+			parameters
+		}
+	}
+
+	parseExpression(tokens) {
+		if (tokens.length === 0) {
+			throw new Error('Expected expression got empty tokens');
+		}
+
+		if (tokens.length === 1) {
+			return this.parseSingleExpressionToken(tokens[0]);
+		}
+
+		if (this.isCallExpression(tokens)) {
+			return this.parseCallExpression(tokens);
+		}
+		return tokens[1].token
+
+
+	}
+
+	parseSingleExpressionToken(token) {
+		if (token.type === 'number') {
+			return  { type: 'Number', value: token.token };
+		}
+
+		if (token.type === 'identifier') {
+			return  { type: 'Variable', value: token.token };
+		}
+
+		throw new Error('Invalid type for single token in expression: ' + val.type);
+	}
+
+	isCallExpression(tokens) {
+		if (tokens < 3) return false
+		if (tokens[0].type !== 'identifier') return false
+		if (tokens[1].type !== 'openParen') return false
+		//if (tokens[tokens.length - 1].type !== 'closeParen') return false
+		return true
+	}
+
+
+
+	spliceUntilType(tokens, type) {
+		for (let i=0; i<tokens.length; i++) {
+			if (tokens[i].type === type) {
+				return tokens.splice(0, i)
+			}
+		}
+		throw new Error(`expect to find ${type} but go nothing`)
+	}
+
+	parseStatement(tokens) {
+
 	}
 
 }

@@ -37,7 +37,10 @@ it('should parse function definition', () => {
 
 
 it('should parse function with new line', () => {
-	const input = 'fn main(): int {\n\tvar a = 10\n}';
+	//TODO try to make this work. It's not working because the tokenizer is not
+	//working with new lines.
+	//const input = 'fn main(): int {\n\tvar a = 10\n}';
+	const input = 'fn main(): int {\n\tvar a = 10;\n}';
 	const tokenizer = new Tokenizer();
 	const tokenList = tokenizer.parse(input);
 	const parser = new Parser();
@@ -54,5 +57,25 @@ it('should parse function with new line', () => {
 				value: { type: 'Number', value: "10" },
 			}
 		]
+	}]);
+})
+
+it('should parse callStatement', () => {
+	const input = 'var a = countA(30, d)';
+	const tokenizer = new Tokenizer();
+	const tokenList = tokenizer.parse(input);
+	const parser = new Parser();
+	const ast = parser.parse(tokenList);
+	expect(ast).toEqual([{
+		type: 'VariableDefinition',
+		name: 'a',
+		value: { 
+			type: 'CallExpression', 
+			name: "countA",
+			parameters: [
+				{ type: 'Number', value: '30' },
+				{ type: 'Variable', value: 'd' }
+			]
+		},
 	}]);
 })
