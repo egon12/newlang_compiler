@@ -4,6 +4,7 @@ const identifier = 'identifier';
 const operator = 'operator';
 const string = 'string';
 const equal = 'equal';
+const ret = 'return';
 
 class Token {
 	constructor() {
@@ -27,6 +28,10 @@ class Token {
 		if (this.type === identifier && isKeyword(this._token)) {
 			this.type = keyword;
 		}
+	}
+
+	get pos() {
+		return `${this._start.line} col ${this._start.column}`
 	}
 
 	isComplete() {
@@ -366,7 +371,18 @@ function isOperator(char) {
 }
 
 function isKeyword(char) {
-	return char === 'var' || char === 'fn';
+	return char === 'var' ||
+		char === 'fn' ||
+		char === 'if' ||
+		char === 'else' ||
+		char === 'while' ||
+		char === 'for' ||
+		char === 'return' ||
+		char === 'break' ||
+		char === 'continue' ||
+		char === 'true' ||
+		char === 'false' ||
+		char === 'null';
 }
 
 function isString(char) {
