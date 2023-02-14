@@ -1,0 +1,26 @@
+fn main() {
+    var a = 1;
+    var b = 2;
+    var c = 1;
+
+    var x = 70;
+
+    var ca = countA(a, x);
+    var cb = countB(b, x);
+    var cc = countC(c, x);
+
+    var result = ca + cb + cc;
+    printint(result);
+}
+
+fn countA(a: int, x: int): int {
+    return a * x * x;
+}
+
+fn countB(b: int, x: int): int {
+    return b * x;
+}
+
+fn countC(c: int, x: int): int {
+    return c;
+}
