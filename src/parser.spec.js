@@ -190,6 +190,39 @@ fn countB(): int {
 	]);
 })
 
+it('should parse function with parameters', () => {
+
+	const input = `
+fn countA(a: int, b: int): int {
+	return a;
+}
+	`;
+	const tokenizer = new Tokenizer();
+	const tokens = tokenizer.parse(input);
+	const parser = new Parser();
+	const ast = parser.parse(tokens);
+
+
+	expect(ast).toEqual([
+		{
+			type: 'FunctionDefinition',
+			namespace: 'main',
+			name: 'countA',
+			parameters: [
+				{ name: 'a', type: { type: 'BuiltInType', name: 'int' } },
+				{ name: 'b', type: { type: 'BuiltInType', name: 'int' } },
+			],
+			return: 'int',
+			body: [
+				{
+					type: 'ReturnStatement',
+					value: { type: 'Variable', id: "a" },
+				}
+			]
+		},
+	]);
+})
+
 
 it('should parse callStatement', () => {
 	const input = 'var a = countA(30, d)';

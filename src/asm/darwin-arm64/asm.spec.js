@@ -62,7 +62,7 @@ let node = [
 		namespace: 'main',
 		name: 'plusOne',
 		parameters: [
-			{ name: 'x', typeName: { type: 'BuiltInType', name: 'int' } },
+			{ name: 'x', type: { type: 'BuiltInType', name: 'int' } },
 		],
 		body: [
 			{
@@ -80,8 +80,8 @@ let node = [
 		namespace: 'main',
 		name: 'add',
 		parameters: [
-			{ name: 'a', typeName: { type: 'BuiltInType', name: 'int' } },
-			{ name: 'b', typeName: { type: 'BuiltInType', name: 'int' } },
+			{ name: 'a', type: { type: 'BuiltInType', name: 'int' } },
+			{ name: 'b', type: { type: 'BuiltInType', name: 'int' } },
 		],
 		body: [
 			{

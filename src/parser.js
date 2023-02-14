@@ -61,7 +61,7 @@ class Parser {
 
 		const parameters = Token
 			.split(rawParams, 'comma')
-			.map(arg => this.expr.parse(arg));
+			.map(arg => this.parseFunctionParam(arg));
 
 		if (name.type !== 'identifier') {
 			throw new Error('Expected identifier');
@@ -85,6 +85,34 @@ class Parser {
 			parameters,
 			body,
 			return: returnType,
+		}
+	}
+
+	parseFunctionParam(tokens) {
+		const name = tokens.shift();
+		if (name.type !== 'identifier') {
+			throw new Error('Expected identifier');
+		}
+		const colon = tokens.shift();
+		if (colon.type !== 'colon') {
+			throw new Error('Expected colon');
+		}
+		const type = tokens.shift();
+		if (type.type !== 'identifier') {
+			throw new Error('Expected identifier');
+		}
+
+		const thetype = {
+			name: type.token,
+		}
+
+		if (type.token == 'int') {
+			thetype.type = 'BuiltInType'
+		}
+
+		return {
+			name: name.token,
+			type: thetype,
 		}
 	}
 
