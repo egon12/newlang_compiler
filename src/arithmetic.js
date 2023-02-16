@@ -1,10 +1,7 @@
 class ArithmaticParser {
-
 	parse(tokens) {
 		return realParse(tokens)
 	}
-
-
 }
 
 function realParse(tokens) {
@@ -19,7 +16,7 @@ function realParse(tokens) {
 				// TODO check for NaN from parseInt
 				return { type: 'Number', value: parseInt(token.token) }
 			case 'identifier':
-				return { type: 'Identifier', value: token.token }
+				return { type: 'Variable', id: token.token }
 			default:
 				//return token
 				throw new Error("Unexpected ", token)

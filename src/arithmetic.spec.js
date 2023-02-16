@@ -89,7 +89,7 @@ it('should parse a simple with variable', () => {
 		value: { 
 			type: 'AddOperator', 
 			left: { type: 'Number', value: 10 },
-			right: { type: 'Identifier', value: "somevar" }
+			right: { type: 'Variable', id: "somevar" }
 		},
 	}]);
 });
