@@ -1,7 +1,5 @@
-const ArithmaticParser = require('./arithmetic')
 const Token = require('./token_utils')
-
-const arithmaticParser = new ArithmaticParser()
+const ExpressionParser = require('./expression')
 
 class Parser {
 
@@ -49,15 +47,14 @@ class Parser {
 		} else if (braceOrReturnType.type == 'openBrace') {
 			openBrace = braceOrReturnType
 		} else {
-			throw new Error(`Expect { or : got ${braceOrReturnType.type} (${braceOrReturnType.token}) at: ${braceOrReturnType.pos}`);
+			throw new Error(`Expect "{" or ":" got ${braceOrReturnType.type} (${braceOrReturnType.token}) at: ${braceOrReturnType.pos}`);
 		}
 
 		if (openBrace.type !== 'openBrace') {
-			throw new Error(`Expect openBrace got ${openBrace.type} (${openBrace.token}) at: ${openBrace.pos}`);
+			throw new Error(`Expect "{" got ${openBrace.type} (${openBrace.token}) at: ${openBrace.pos}`);
 		}
 
 		const body = this.parseBodyFunction(tokens);
-		//const closeBrace = tokens.shift();
 
 		const parameters = Token
 			.split(rawParams, 'comma')
@@ -75,9 +72,6 @@ class Parser {
 			throw new Error('Expected close paren');
 		}
 
-		//if (closeBrace.type !== 'closeBrace') {
-			//throw new Error(`Expected closeBrace got ${closeBrace.type} (${closeBrace.token}) at ${closeBrace.pos}`);
-		//}
 		return {
 			type: 'FunctionDefinition',
 			namespace: "main",
@@ -180,21 +174,7 @@ class Parser {
 			index++
 		}
 
-		let useOperator = false;
-		for (let i = 0; i<lastIndex; i++) {
-			const tok = tokenList[i];
-			if (tok.type == 'operator') {
-				useOperator = true;
-				break;
-			}
-		}
-
-		let value;
-		if (useOperator) {
-			value = arithmaticParser.parse(tokenList.splice(0, lastIndex))
-		} else {
-			value = this.expr.parse(tokenList.splice(0, lastIndex))
-		}
+		const value = this.expr.parse(tokenList.splice(0, lastIndex))
 
 		const ast = {
 			type: 'VariableDefinition',
@@ -224,67 +204,7 @@ class Parser {
 			parameters
 		}
 	}
-
-
-	parseStatement(tokens) {
-
-	}
-
 }
 
-class ExpressionParser {
-
-	parse(tokens) {
-		if (tokens.length === 0) {
-			throw new Error('Expected expression got empty tokens');
-		}
-
-		if (tokens.length === 1) {
-			return this.parseSingleExpressionToken(tokens[0]);
-		}
-
-		if (this.isCallExpression(tokens)) {
-			return this.parseCallExpression(tokens);
-		}
-		return tokens[1].token
-	}
-
-	parseSingleExpressionToken(token) {
-		if (token.type === 'number') {
-			return  { type: 'Number', value: token.token };
-		}
-
-		if (token.type === 'identifier') {
-			return  { type: 'Variable', id: token.token };
-		}
-
-		throw new Error('Invalid type for single token in expression: ' + val.type);
-	}
-
-	isCallExpression(tokens) {
-		if (tokens < 3) return false
-		if (tokens[0].type !== 'identifier') return false
-		if (tokens[1].type !== 'openParen') return false
-		//if (tokens[tokens.length - 1].type !== 'closeParen') return false
-		return true
-	}
-
-	parseCallExpression(tokens) {
-		const name = tokens.shift().token;
-		const openParen = tokens.shift();
-		const rawArgs = Token.splice(tokens, 'closeParen');
-		const closeParen = tokens.shift();
-
-		const parameters = Token
-			.split(rawArgs, 'comma')
-			.map(arg => this.parse(arg));
-
-		return {
-			type: 'CallExpression',
-			name,
-			parameters
-		}
-	}
-}
 
 module.exports = Parser;
