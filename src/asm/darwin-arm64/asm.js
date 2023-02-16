@@ -130,6 +130,7 @@ function genExpression(node, reg, stackVar) {
 	if (node.type == 'CallExpression') {
 		return genCallExpression(node, reg, stackVar)
 	}
+	throw new Error('Unknown expression type: ' + node.type)
 }
 
 function included() {
