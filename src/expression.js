@@ -24,8 +24,7 @@ class ExpressionParser {
 			return this.parseCallExpression(tokens);
 		}
 
-
-		return tokens[1].token
+		throw new Error('Invalid expression');
 	}
 
 	parseSingleExpressionToken(token) {
@@ -70,8 +69,14 @@ class ExpressionParser {
 			.split(rawArgs, 'comma')
 			.map(arg => this.parse(arg));
 
+		let namespace = 'main'
+		if (['printint', 'println'].indexOf(name) > -1) {
+			namespace = ''
+		}
+
 		return {
 			type: 'CallExpression',
+			namespace,
 			name,
 			parameters
 		}
