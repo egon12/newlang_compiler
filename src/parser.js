@@ -74,7 +74,7 @@ class Parser {
 
 		return {
 			type: 'FunctionDefinition',
-			namespace: "main",
+			namespace: 'main',
 			name: name.token,
 			parameters,
 			body,
@@ -127,6 +127,9 @@ class Parser {
 				if (next.token === 'return') {
 					result.push(this.parseReturnStatement(tokenList))
 				}
+			}
+			if (this.isCallStatement(next, tokenList[0])) {
+				result.push(this.parseCallStatement(next, tokenList))
 			}
 		}
 		return result
@@ -187,21 +190,28 @@ class Parser {
 		return ast;
 	}
 
+	isCallStatement(token, nextToken) {
+		if (token.type !== 'identifier') {
+			return false;
+		}
+		if (nextToken.type !== 'openParen') {
+			return false;
+		}
+		return true;
+	}
+
 	parseCallStatement(first, tokens) {
 		const openParen = tokens.shift();
 		const args = Token.splice(tokens, 'closeParen');
 		const closeParen = tokens.shift();
 
-
-		let parameters = Token.split(args, 'comma')
-			//.map(arg => arg.token);
-
-		parameters = parameters.map(expr => this.parseExpression(expr));
+		args.unshift(openParen);
+		args.unshift(first);
+		args.push(closeParen);
 
 		return {
-			type: 'CallExpression',
-			name: first.token,
-			parameters
+			type: 'CallStatement',
+			value: this.expr.parse(args),
 		}
 	}
 }

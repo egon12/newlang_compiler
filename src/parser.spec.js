@@ -224,7 +224,7 @@ fn countA(a: int, b: int): int {
 })
 
 
-it('should parse callStatement', () => {
+it('should parse VariableDefinitin With CallExpression', () => {
 	const input = 'var a = countA(30, d)';
 	const tokenizer = new Tokenizer();
 	const tokenList = tokenizer.parse(input);
@@ -235,7 +235,8 @@ it('should parse callStatement', () => {
 		name: 'a',
 		value: { 
 			type: 'CallExpression', 
-			name: "countA",
+			namespace: 'main',
+			name: 'countA',
 			parameters: [
 				{ type: 'Number', value: '30' },
 				{ type: 'Variable', id: 'd' }
