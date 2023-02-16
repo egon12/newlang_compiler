@@ -1,4 +1,6 @@
 fn main() {
+	printint(0);
+
     var a = 1;
     var b = 2;
     var c = 1;
@@ -10,7 +12,10 @@ fn main() {
     var cc = countC(c, x);
 
     var result = ca + cb + cc;
+
     printint(result);
+	println();
+	return 0;
 }
 
 fn countA(a: int, x: int): int {
