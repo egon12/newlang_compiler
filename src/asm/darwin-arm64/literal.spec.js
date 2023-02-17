@@ -1,6 +1,6 @@
 const { Collector } = require('./literal')
 const fs = require('fs');
-const asm = require('./literal_asm');
+const { asm, Generator } = require('./literal_asm');
 
 describe('literalCollector', () => {
 
@@ -26,8 +26,9 @@ main.main.world: .ascii " world!
 	})
 
 	it('lets try to compile this tree', () => {
-		const result = asm(node);
-		//expect(node).toEqual('')
+		const generator = new Generator()
+		const result = generator.generate(node);
+		expect(result).toMatchSnapshot();
 		fs.writeFileSync(__dirname + '/literal_asm.spec.s', result);
 	})
 })

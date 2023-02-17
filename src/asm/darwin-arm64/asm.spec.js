@@ -1,11 +1,19 @@
 const fs = require('fs');
 const asm = require('./asm');
+const { Generator }  = require('./literal_asm');
 
 it('should compile to asm', () => {
 	const result = asm(node)
 	expect(result).toMatchSnapshot();
 	fs.writeFileSync(__dirname + '/asm.spec.s', result);
 })
+
+it('Generator should compile to asm', () => {
+	const generator = new Generator();
+	const result = generator.generate(node)
+	expect(result).toMatchSnapshot();
+})
+
 
 
 let node = [
