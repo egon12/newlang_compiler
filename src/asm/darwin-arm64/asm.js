@@ -133,6 +133,35 @@ function genExpression(node, reg, stackVar) {
 	throw new Error('Unknown expression type: ' + node.type)
 }
 
+const theprintln1=`
+println:
+	sub sp, sp, #16
+	stp x29, x30, [sp, #16]
+	add x29, sp, #16
+	mov x0, #1
+	adrp x1, lnstr@page
+	mov x2, #1
+	mov x16, #4
+	svc #0x80
+	bl _printf
+	ldp x29, x30, [sp, #16]
+	add sp, sp, #16
+	ret
+`
+
+const theprintln2=`
+println:
+	sub sp, sp, #16
+	stp x29, x30, [sp, #16]
+	add x29, sp, #16
+	adrp x0, lnstr@page
+	add x0, x0, lnstr@pageoff
+	bl _printf
+	ldp x29, x30, [sp, #16]
+	add sp, sp, #16
+	ret
+`
+
 function included() {
 	return `
 printint:
@@ -146,18 +175,7 @@ printint:
 	ldp x29, x30, [sp, #16]
 	add sp, sp, #16
 	ret
-
-println:
-	sub sp, sp, #16
-	stp x29, x30, [sp, #16]
-	add x29, sp, #16
-	adrp x0, lnstr@page
-	add x0, x0, lnstr@pageoff
-	bl _printf
-	ldp x29, x30, [sp, #16]
-	add sp, sp, #16
-	ret
-
+${theprintln2}
 
 .data
 lnstr: .asciz "\\n"
