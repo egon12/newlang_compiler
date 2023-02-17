@@ -2,7 +2,7 @@ const Tokenizer = require('./tokenizer');
 
 it('parse some arithmatic', () => {
   const tokenizer = new Tokenizer();
-  const tokenList = tokenizer.parse('1 + 2');
+  const tokenList = tokenizer.parse('10 + 2');
   expect(tokenList[0].type).toEqual('number');
   expect(tokenList[1].type).toEqual('operator');
   expect(tokenList[2].type).toEqual('number');

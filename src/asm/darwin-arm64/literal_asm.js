@@ -1,3 +1,4 @@
+const { Collector } = require('./literal')
 
 function isMathOperator(node) {
 	if (node.type === 'AddOperator') return true
@@ -8,7 +9,7 @@ function isMathOperator(node) {
 }
 
 
-function genFunctionDefinition(node) {
+function genFunctionDefinition(node, data) {
 	let result = ''
 	const [stackVar, stackSize] = collectStackVar(node)
 
@@ -20,15 +21,15 @@ function genFunctionDefinition(node) {
 
 	for (let i = 0; i < node.body.length; i++) {
 		if (node.body[i].type == 'ReturnStatement') {
-			result += genReturnStatement(node.body[i], stackVar)
+			result += genReturnStatement(node.body[i], stackVar, data)
 		}
 
 		if (node.body[i].type == 'VariableDefinition') {
-			result += genVariableDefinition(node.body[i], stackVar)
+			result += genVariableDefinition(node.body[i], stackVar, data)
 		}
 		
 		if (node.body[i].type == 'CallStatement') {
-			result += genCallStatement(node.body[i], stackVar)
+			result += genCallStatement(node.body[i], stackVar, data)
 		}
 	}
 	
@@ -59,9 +60,9 @@ function collectStackVar(node) {
 	return [stackVar, stackSize]
 }
 
-function genVariableDefinition(node, stackVar) {
+function genVariableDefinition(node, stackVar, data) {
 	let result = ''
-	result += genExpression(node.value, 'x0', stackVar)
+	result += genExpression(node.value, 'x0', stackVar, data)
 	result += '\tstr x0, ' + stackVar[node.name] + '\n'
 	return result
 }
@@ -91,13 +92,22 @@ function genCallExpression(node, reg, stackVar) {
 		result += genExpression(param, `x${i}`, stackVar)
 	})
 
-	if (node.namespace == '') {
+	if (node.name == 'syscall3') {
+		result += '\tmov x16, x3\n\tsvc #0x80\n'
+	} else {
+		result += genBranchLink(node)
+	}
+
+	result += `\tmov ${reg}, x0\n`
+	return result
+}
+
+function genBranchLink(node) {
+	if (!node.namespace) {
 		result += `\tbl ${node.name}\n`
 	} else {
 		result += `\tbl ${node.namespace}.${node.name}\n`
 	}
-	result += `\tmov ${reg}, x0\n`
-	return result
 }
 
 function genMathExpression(node, reg, stackVar) {
@@ -117,13 +127,14 @@ function genMathExpression(node, reg, stackVar) {
 	return result
 }
 
-function genLiteral(node, reg, stackVar) {
-	const first = '\tadrp ' + reg + ', ' + 'msg@page\n';
-	const second = '\tadd ' + reg + ', ' + 'msg@pageoff\n';
+function genLiteral(node, reg, stackVar, data) {
+	const dataName = data.find(d => d.value == node.value).name
+	const first = '\tadrp ' + reg + ', ' + dataName + '@page\n';
+	const second = '\tadd ' + reg + ', ' + reg + ',' + dataName + '@pageoff\n';
 	return first + second
 }
 
-function genExpression(node, reg, stackVar) {
+function genExpression(node, reg, stackVar, data) {
 	if (node.type == 'Variable') {
 		return '\tldr ' + reg + ', ' + stackVar[node.id] + '\n'
 	}
@@ -137,63 +148,11 @@ function genExpression(node, reg, stackVar) {
 		return genCallExpression(node, reg, stackVar)
 	}
 	if (node.type == 'Literal') {
-		return genLiteral(node, reg, stackVar)
+		return genLiteral(node, reg, stackVar, data)
 	}
-
-
 	throw new Error('Unknown expression type: ' + node.type)
 }
 
-const theprintln1=`
-println:
-	sub sp, sp, #16
-	stp x29, x30, [sp, #16]
-	add x29, sp, #16
-	mov x0, #1
-	adrp x1, lnstr@page
-	mov x2, #1
-	mov x16, #4
-	svc #0x80
-	bl _printf
-	ldp x29, x30, [sp, #16]
-	add sp, sp, #16
-	ret
-`
-
-const theprintln2=`
-println:
-	sub sp, sp, #16
-	stp x29, x30, [sp, #16]
-	add x29, sp, #16
-	adrp x0, lnstr@page
-	add x0, x0, lnstr@pageoff
-	bl _printf
-	ldp x29, x30, [sp, #16]
-	add sp, sp, #16
-	ret
-`
-
-function included() {
-	return `
-printint:
-	sub sp, sp, #16
-	stp x29, x30, [sp, #16]
-	add x29, sp, #16
-	str x0, [sp, #0]
-	adrp x0, intStr@page
-	add x0, x0, intStr@pageoff
-	bl _printf
-	ldp x29, x30, [sp, #16]
-	add sp, sp, #16
-	ret
-${theprintln2}
-
-.data
-lnstr: .asciz "\\n"
-intStr: .asciz "%d"
-	`
-
-}
 
 function head() {
 	return `.global _main
@@ -209,18 +168,20 @@ _main:
 }
 
 function gen(ast) {
+	const collector = new Collector()
+	const data = collector.collect(ast)
 	let result = ''
 	result += head()
-	result += genProgram(ast)
-	result += included()
+	result += genProgram(ast, data)
+	result += 'data:\n' + collector.dataToAsm()
 	return result
 }
 
-function genProgram(node) {
+function genProgram(node, data) {
 	let result = ''
 	for (let i = 0; i < node.length; i++) {
 		if (node[i].type == 'FunctionDefinition') {
-			result += genFunctionDefinition(node[i])
+			result += genFunctionDefinition(node[i], data)
 		}
 	}
 	return result
