@@ -1,30 +1,45 @@
 const Tokenizer = require('./tokenizer');
 
-it('parse some arithmatic', () => {
-  const tokenizer = new Tokenizer();
-  const tokenList = tokenizer.parse('10 + 2');
-  expect(tokenList[0].type).toEqual('number');
-  expect(tokenList[1].type).toEqual('operator');
-  expect(tokenList[2].type).toEqual('number');
-})
+describe('Tokenizer', () => {
+	const tokenizer = new Tokenizer();
 
-it('parse some var definition', () => {
-  const tokenizer = new Tokenizer();
-  const tokenList = tokenizer.parse('var a = "hello"');
-  expect(tokenList[0].type).toEqual('keyword');
-  expect(tokenList[1].type).toEqual('identifier');
-  expect(tokenList[2].type).toEqual('equal');
-  expect(tokenList[3].type).toEqual('string');
-})
+	it('should tokenize some arithmetic', () => {
+		const tokens = tokenizer.parse('10 + 2');
+		expect(tokens[0].type).toEqual('number');
+		expect(tokens[1].type).toEqual('operator');
+		expect(tokens[2].type).toEqual('number');
+	})
 
+	it('should tokenize arithmatic without space', () => {
+		const tokens = tokenizer.parse('10+2000');
+		expect(tokens[0].type).toEqual('number');
+		expect(tokens[1].type).toEqual('operator');
+		expect(tokens[2].type).toEqual('number');
+	})
 
-it('tokenize simple function definition', () => {
-  const tokenizer = new Tokenizer();
-  const tokenList = tokenizer.parse('fn a() { }');
-  expect(tokenList[0].type).toEqual('keyword');
-  expect(tokenList[1].type).toEqual('identifier');
-  expect(tokenList[2].type).toEqual('openParen');
-  expect(tokenList[3].type).toEqual('closeParen');
-  expect(tokenList[4].type).toEqual('openBrace');
-  expect(tokenList[5].type).toEqual('closeBrace');
+	it('should tokenize some var definition', () => {
+		const tokens = tokenizer.parse('var a = "hello"');
+		expect(tokens[0].type).toEqual('keyword');
+		expect(tokens[1].type).toEqual('identifier');
+		expect(tokens[2].type).toEqual('equal');
+		expect(tokens[3].type).toEqual('string');
+	})
+
+	it('should tokenize simple function definition', () => {
+		const tokens = tokenizer.parse('fn a() { }');
+		expect(tokens[0].type).toEqual('keyword');
+		expect(tokens[1].type).toEqual('identifier');
+		expect(tokens[2].type).toEqual('openParen');
+		expect(tokens[3].type).toEqual('closeParen');
+		expect(tokens[4].type).toEqual('openBrace');
+		expect(tokens[5].type).toEqual('closeBrace');
+	})
+
+	it('tokenize string into variable', () => {
+		const tokens = tokenizer.parse('var a = "hello"');
+		expect(tokens[0].type).toEqual('keyword');
+		expect(tokens[1].type).toEqual('identifier');
+		expect(tokens[2].type).toEqual('equal');
+		expect(tokens[3].type).toEqual('string');
+	})
 })

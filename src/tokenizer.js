@@ -62,11 +62,7 @@ class Tokenizer {
 			const char = input[this._index];
 
 			if (char === '\n') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
+				this._endIfStarting();
 				this._line++;
 				this._column = 1;
 				this._index++;
@@ -74,32 +70,14 @@ class Tokenizer {
 			}
 
 			if (char === ' ' || char === '\t') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._index++;
-				this._column++;
+				this._endIfStarting();
+				this._nextCursor();
 				continue;
 			}
 
 			if (isOperator(char)) {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = operator;
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-
-				this._column = 1;
-				this._index++;
-
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken(operator, char);
 				continue;
 			}
 
@@ -107,12 +85,9 @@ class Tokenizer {
 				if (this._token.isStarting()) {
 					this._token.token += char;
 				} else {
-					this._token.type = identifier;
-					this._token.start(this._index, this._line, this._column);
-					this._token.token = char;
+					this._startToken(identifier, char);
 				}
-				this._column++;
-				this._index++;
+				this._nextCursor();
 				continue;
 			}
 
@@ -120,212 +95,83 @@ class Tokenizer {
 				if (this._token.isStarting()) {
 					this._token.token += char;
 				} else {
-					this._token.type = number;
-					this._token.start(this._index, this._line, this._column);
-					this._token.token = char;
+					this._startToken(number, char);
 				}
-				this._column++;
-				this._index++;
+				this._nextCursor();
 				continue;
 			}
 
 
 			if (char === '=') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = equal;
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken(equal, char);
 				continue;
 			}
 
 
 			if (char === '(') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'openParen';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('openParen', char);
 				continue;
 			}
 
 			if (char === ')') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'closeParen';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('closeParen', char);
 				continue;
 			}
 
 			if (char === '{') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'openBrace';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('openBrace', char);
 				continue;
 			}
 
 			if (char === '}') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'closeBrace';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('closeBrace', char);
 				continue;
 			}
 
 
 			if (char === ':') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'colon';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('colon', char);
 				continue;
 			}
-
-			if (char === ':') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'colon';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
-				continue;
-			}
-
 
 			if (char === ';') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'semicolon';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('semicolon', char);
 				continue;
 			}
 
 			if (char === ',') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'comma';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('comma', char);
 				continue;
 			}
 
+			// TODO must change this if we want to use floating number
 			if (char === '.') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'dot';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
-				this._column++;
-				this._index++;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endIfStarting();
+				this._singleCharToken('dot', char);
 				continue;
 			}
 
 			if (char === '"') {
-				if (this._token.isStarting()) {
-					this._token.end(this._index, this._line, this._column);
-					this._tokenList.push(this._token);
-					this._token = new Token();
-				}
-				this._token.type = 'string';
-				this._token.start(this._index, this._line, this._column);
-				this._token.token = char;
+				this._endIfStarting();
+				this._startToken(string, char);
 
-				this._column++;
-				this._index++;
+				this._nextCursor();
 				let newChar = input[this._index];
 				while(newChar !== '"' && this._index < input.length) {
-					this._column++;
-					this._index++;
+					this._nextCursor();
 					newChar = input[this._index];
 					this._token.token += newChar;
 				}
 				this._token.token += newChar;
-				this._token.end(this._index, this._line, this._column);
-				this._tokenList.push(this._token);
-				this._token = new Token();
+				this._endToken();
 				continue;
 			}
 
@@ -333,13 +179,38 @@ class Tokenizer {
 			throw new Error('Invalid character: ' + char + '('+ char.charCodeAt(0).toString(16) +') at ' + this._index + ' on line ' + this._line + ' column ' + this._column);
 		}
 
-		if (this._token.isStarting()) {
-			this._token.end(this._index, this._line, this._column);
-			this._tokenList.push(this._token);
-			this._token = new Token();
-		}
+		this._endIfStarting();
 
 		return this._tokenList;
+	}
+
+	_endIfStarting() {
+		if (this._token.isStarting()) {
+			this._endToken();
+		}
+	}
+
+	_startToken(type, firstChar) {
+		this._token.type = type;
+		this._token.start(this._index, this._line, this._column);
+		this._token.token = firstChar;
+	}
+
+	_endToken() {
+		this._token.end(this._index, this._line, this._column);
+		this._tokenList.push(this._token);
+		this._token = new Token();
+	}
+
+	_singleCharToken(type, char) {
+		this._startToken(type, char);
+		this._endToken();
+		this._nextCursor();
+	}
+
+	_nextCursor() {
+		this._index++;
+		this._column++;
 	}
 }
 
