@@ -165,12 +165,13 @@ class Tokenizer {
 
 				this._nextCursor();
 				let newChar = input[this._index];
+				this._token.token += newChar;
 				while(newChar !== '"' && this._index < input.length) {
 					this._nextCursor();
 					newChar = input[this._index];
 					this._token.token += newChar;
 				}
-				this._token.token += newChar;
+				this._nextCursor();
 				this._endToken();
 				continue;
 			}
