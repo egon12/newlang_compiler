@@ -17,6 +17,7 @@ class Generator {
 	#inFunction = ''
 
 	#numIfStatement = 1
+	#numForStatement = 0
 
 	constructor() {
 		this.globalVar = []
@@ -53,6 +54,7 @@ class Generator {
 		this.#fastReturn = false
 		this.#inFunction = node
 		this.#numIfStatement = 1
+		this.#numForStatement = 0
 
 		result += `${node.namespace}.${node.name}:\n`
 		result += '\tsub sp, sp, #' + stackSize + '\n'
@@ -75,12 +77,25 @@ class Generator {
 		return result
 	}
 
+	#genStatements(nodes) {
+		let result = ''
+		for (let i = 0; i < nodes.length; i++) {
+			result += this.#genStatement(nodes[i], false)
+		}
+		return result
+	}
+
 	#genStatement(node, isLast) {
 		if (node.type == 'ReturnStatement') {
 			return this.#genReturnStatement(node, isLast)
 		}
 
 		if (node.type == 'VariableDefinition') {
+			return this.#genVariableDefinition(node)
+		}
+
+		if (node.type == 'AssignmentStatement') {
+			// TODO hack, but maybe works..
 			return this.#genVariableDefinition(node)
 		}
 
@@ -91,6 +106,15 @@ class Generator {
 		if (node.type == 'IfStatement') {
 			return this.#genIfStatement(node)
 		}
+
+		if (node.type == 'ForStatement') {
+			return this.#genForStatement(node)
+		}
+
+		if (node.type == 'BreakStatement') {
+			return this.#genBreakStatement(node)
+		}
+
 		throw new Error('Unknown statement type: ' + node.type)
 	}
 
@@ -163,6 +187,30 @@ class Generator {
 		result += elseLabel + ':\n'
 		return result
 	}	
+
+	#genForStatement(node) {
+		this.#numForStatement += 1
+		const body = this.#genStatements(node.body)
+		const { forLabel, exitLabel } = this.#genForLabels()
+		return `${forLabel}:
+${body}
+	b ${forLabel}
+${exitLabel}:
+`
+	}
+
+	#genBreakStatement(node) {
+		const { exitLabel } = this.#genForLabels()
+		return '\tb '+ exitLabel +'\n'
+	}
+
+	#genForLabels() {
+		const { namespace, name } = this.#inFunction
+		const num = this.#numForStatement
+		const forLabel = namespace + '.' + name + '.for' + num;
+		const exitLabel = forLabel + '.exit'
+		return  { exitLabel, forLabel }
+	}
 
 	#genIfLabels() {
 		const { namespace, name } = this.#inFunction
@@ -271,15 +319,31 @@ class Generator {
 			this.#stackVar[node.parameters[i].name] = '[x29, #-' + stackSize + ']'
 		}
 
+		stackSize = this.#collectVarStackChild(node, stackSize)
+
+		if (stackSize < 16) {
+			stackSize = 16
+		}
+
+		if (stackSize % 16 != 0) {
+			stackSize += 16 - stackSize % 16
+		}
+
+
+		return stackSize
+	}
+
+	#collectVarStackChild(node, stackSize) {
 		for (let i = 0; i < node.body.length; i++) {
 			if (node.body[i].type == 'VariableDefinition') {
 				stackSize += 8
 				this.#stackVar[node.body[i].name] = '[x29, #-' + stackSize + ']'
+				continue
 			}
-		}
-
-		if (stackSize < 16) {
-			stackSize = 16
+			if (node.body[i].type == 'ForStatement') {
+				stackSize = this.#collectVarStackChild(node.body[i], stackSize)
+				continue
+			}
 		}
 		return stackSize
 	}

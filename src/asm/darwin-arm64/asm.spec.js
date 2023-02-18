@@ -14,8 +14,6 @@ it('Generator should compile to asm', () => {
 	expect(result).toMatchSnapshot();
 })
 
-
-
 let node = [
 	{
 		type: 'FunctionDefinition',
@@ -64,7 +62,6 @@ let node = [
 			}
 		]
 	},
-
 	{
 		type: 'FunctionDefinition',
 		namespace: 'main',

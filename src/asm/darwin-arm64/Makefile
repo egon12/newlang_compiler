@@ -26,3 +26,13 @@ condition-test: condition.o
 
 condition.o: condition.spec.s
 	as -o condition.o condition.spec.s
+
+
+print_int: print_int-test
+	./print_int-test
+
+print_int-test: print_int.o
+	ld -o print_int-test print_int.o -lSystem -syslibroot `xcrun -sdk macosx --show-sdk-path`
+
+print_int.o: print_int.spec.s
+	as -o print_int.o print_int.spec.s
