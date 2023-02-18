@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should generate condition codes 1`] = `
+".global _main
+.align 2
+
+_main:
+	bl main.main
+	mov x16, #1
+	svc 0x80
+main.main:
+	sub sp, sp, #16
+	stp x29, x30, [sp, #16]
+	add x29, x29, #16
+	mov x0, #4
+	str x0, [x29, #-8]
+	mov x0, #4
+	ldr x1, [x29, #-8]
+	cmp x0, x1
+	beq main.main.if1.true
+	b main.main.if1.else
+main.main.if1.true:
+	mov x0, #4
+	b main.main.return
+main.main.if1.else:
+	mov x0, #0
+main.main.return:
+	ldp x29, x30, [sp, #16]
+	add sp, sp, #16
+	ret
+data:
+
+
+"
+`;

@@ -12,6 +12,12 @@ class Generator {
 	// #stackVar is variable that declared in function
 	#stackVar = {} 
 
+	#fastReturn = false
+
+	#inFunction = ''
+
+	#numIfStatement = 1
+
 	constructor() {
 		this.globalVar = []
 		this.#literalData = []
@@ -44,6 +50,10 @@ class Generator {
 		// this will fill thss.#stackVar
 		const stackSize = this.#collectStackVar(node)
 
+		this.#fastReturn = false
+		this.#inFunction = node
+		this.#numIfStatement = 1
+
 		result += `${node.namespace}.${node.name}:\n`
 		result += '\tsub sp, sp, #' + stackSize + '\n'
 		result += '\tstp x29, x30, [sp, #' + stackSize + ']\n'
@@ -51,17 +61,12 @@ class Generator {
 		result += this.#genParameters(node.parameters)
 
 		for (let i = 0; i < node.body.length; i++) {
-			if (node.body[i].type == 'ReturnStatement') {
-				result += this.#genReturnStatement(node.body[i])
-			}
+			const isLast = i == node.body.length - 1;
+			result += this.#genStatement(node.body[i], isLast)
+		}
 
-			if (node.body[i].type == 'VariableDefinition') {
-				result += this.#genVariableDefinition(node.body[i])
-			}
-
-			if (node.body[i].type == 'CallStatement') {
-				result += this.#genCallStatement(node.body[i])
-			}
+		if (this.#fastReturn) {
+			result += `${node.namespace}.${node.name}.return:\n`
 		}
 
 		result += '\tldp x29, x30, [sp, #' + stackSize + ']\n'
@@ -70,29 +75,35 @@ class Generator {
 		return result
 	}
 
-	#collectStackVar(node) {
-		let stackSize = 0
-		for (let i = 0; i < node.parameters.length; i++) {
-			stackSize += 8
-			this.#stackVar[node.parameters[i].name] = '[x29, #-' + stackSize + ']'
+	#genStatement(node, isLast) {
+		if (node.type == 'ReturnStatement') {
+			return this.#genReturnStatement(node, isLast)
 		}
 
-		for (let i = 0; i < node.body.length; i++) {
-			if (node.body[i].type == 'VariableDefinition') {
-				stackSize += 8
-				this.#stackVar[node.body[i].name] = '[x29, #-' + stackSize + ']'
-			}
+		if (node.type == 'VariableDefinition') {
+			return this.#genVariableDefinition(node)
 		}
 
-		if (stackSize < 16) {
-			stackSize = 16
+		if (node.type == 'CallStatement') {
+			return this.#genCallStatement(node)
 		}
-		return stackSize
+
+		if (node.type == 'IfStatement') {
+			return this.#genIfStatement(node)
+		}
+		throw new Error('Unknown statement type: ' + node.type)
 	}
 
-	#genReturnStatement(node) {
+
+	#genReturnStatement(node, isLast) {
+		if (isLast) {
+			return this.#genExpression(node.value, 'x0')
+		}
+
+		this.#fastReturn = true
 		let result = ''
 		result += this.#genExpression(node.value, 'x0')
+		result += '\tb ' + this.#inFunction.namespace + '.' + this.#inFunction.name + '.return\n'
 		return result
 	}
 
@@ -107,10 +118,68 @@ class Generator {
 		return this.#genCallExpression(node.value, 'x0')
 	}
 
+	#genIfStatement(node) {
+		let trueBody = ''
+		for (let i = 0; i < node.body.length; i++) {
+			// so we don't change return statment in another spec
+			trueBody += this.#genStatement(node.body[i], false)
+		}
+		//const trueLabel = this.#genLabel(node)
+		const { trueLabel, elseLabel }  = this.#genIfLabels()
+
+		// TODO remove this assignment
+		node = node.condition
+
+		let result = ''
+		result += this.#genExpression(node.left, 'x0')
+		result += this.#genExpression(node.right, 'x1')
+
+		if (node.operator == '==') {
+			result += '\tcmp x0, x1\n'
+			result += '\tbeq ' + trueLabel + '\n'
+		} else if (node.operator == '!=') {
+			result += '\tcmp x0, x1\n'
+			result += '\tbne ' + trueLabel + '\n'
+		} else if (node.operator == '<') {
+			result += '\tcmp x0, x1\n'
+			result += '\tblt ' + trueLabel + '\n'
+		} else if (node.operator == '>') {
+			result += '\tcmp x0, x1\n'
+			result += '\tbgt ' + trueLabel + '\n'
+		} else if (node.operator == '<=') {
+			result += '\tcmp x0, x1\n'
+			result += '\tble ' + trueLabel + '\n'
+		} else if (node.operator == '>=') {
+			result += '\tcmp x0, x1\n'
+			result += '\tbge ' + trueLabel + '\n'
+		} else {
+			throw new Error('Unknown operator: ' + node.operator)
+		}
+
+		result += '\tb ' + elseLabel + '\n'
+		result += trueLabel + ':\n'
+		result += trueBody
+		//result += '\tb ' + elseLabel + '\n'
+		result += elseLabel + ':\n'
+		return result
+	}	
+
+	#genIfLabels() {
+		const { namespace, name } = this.#inFunction
+		const num = this.#numIfStatement
+		const trueLabel = namespace + '.' + name + '.if' + num + '.true'
+		this.#numIfStatement++
+		const elseLabel = namespace + '.' + name + '.if' + num + '.else'
+		return { trueLabel, elseLabel }
+	}
+
 	#genExpression(node, reg) {
 		const { type, value, id } = node
 		if (type == 'Variable') {
 			const sv = this.#stackVar[id];
+			if (sv == undefined) {
+				throw new Error('Unknown variable: ' + id)
+			}
 			return `\tldr ${reg}, ${sv}\n`
 		}
 		if (type == 'Number') {
@@ -193,6 +262,28 @@ class Generator {
 		}
 		return result;
 	}
+
+	#collectStackVar(node) {
+		let stackSize = 0
+		this.#stackVar = {}
+		for (let i = 0; i < node.parameters.length; i++) {
+			stackSize += 8
+			this.#stackVar[node.parameters[i].name] = '[x29, #-' + stackSize + ']'
+		}
+
+		for (let i = 0; i < node.body.length; i++) {
+			if (node.body[i].type == 'VariableDefinition') {
+				stackSize += 8
+				this.#stackVar[node.body[i].name] = '[x29, #-' + stackSize + ']'
+			}
+		}
+
+		if (stackSize < 16) {
+			stackSize = 16
+		}
+		return stackSize
+	}
+
 }
 
 function head() {

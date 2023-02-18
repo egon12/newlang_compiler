@@ -17,3 +17,12 @@ literal-test: literal.o
 literal.o: literal_asm.spec.s
 	as -o literal.o literal_asm.spec.s
 
+
+condition: condition-test
+	./condition-test
+
+condition-test: condition.o
+	ld -o condition-test condition.o -lSystem -syslibroot `xcrun -sdk macosx --show-sdk-path`
+
+condition.o: condition.spec.s
+	as -o condition.o condition.spec.s

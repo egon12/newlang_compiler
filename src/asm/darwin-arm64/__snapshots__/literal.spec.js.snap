@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`literalCollector lets try to compile this tree 1`] = `
+".global _main
+.align 2
+
+_main:
+	bl main.main
+	mov x16, #1
+	svc 0x80
+main.main:
+	sub sp, sp, #16
+	stp x29, x30, [sp, #16]
+	add x29, x29, #16
+	adrp x0, main.main.world@page
+	add x0, x0,main.main.world@pageoff
+	str x0, [x29, #-8]
+	mov x0, #1
+	ldr x1, [x29, #-8]
+	mov x2, #8
+	mov x3, #4
+	mov x16, x3
+	svc #0x80
+	mov x0, x0
+	mov x0, #0
+	ldp x29, x30, [sp, #16]
+	add sp, sp, #16
+	ret
+data:
+
+hello: .ascii "Hello"
+main.main.world: .ascii " world!
+"
+"
+`;
