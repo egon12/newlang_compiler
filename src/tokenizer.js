@@ -133,6 +133,17 @@ class Tokenizer {
 				continue;
 			}
 
+			if (char === '[') {
+				this._endIfStarting();
+				this._singleCharToken('openSquareBracket', char);
+				continue;
+			}
+
+			if (char === ']') {
+				this._endIfStarting();
+				this._singleCharToken('closeSquareBracket', char);
+				continue;
+			}
 
 			if (char === ':') {
 				this._endIfStarting();

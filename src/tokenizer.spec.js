@@ -27,6 +27,12 @@ describe('Tokenizer', () => {
 		expect(allTypes(tokens)).toEqual(['keyword', 'identifier', 'equal', 'string']);
 	})
 
+	it('should tokenize array indexing', () => {
+		const tokens = tokenizer.parse('var c = a[1]');
+		expect(allTokens(tokens)).toEqual(['var', 'c', '=', 'a', '[', '1',']']);
+		expect(allTypes(tokens)).toEqual(['keyword', 'identifier', 'equal', 'identifier', 'openSquareBracket', 'closeSquareBracket']);
+	})
+
 	it('should tokenize simple function definition', () => {
 		const tokens = tokenizer.parse('fn a() { }');
 		expect(allTokens(tokens)).toEqual(['fn', 'a', '(', ')', '{', '}']);
