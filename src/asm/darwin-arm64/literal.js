@@ -45,5 +45,4 @@ class Collector {
 
 module.exports = {
 	Collector
-	
 }
