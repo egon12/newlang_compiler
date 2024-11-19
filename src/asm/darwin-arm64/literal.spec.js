@@ -80,3 +80,11 @@ const node = [
 		]
 	},
 ]
+
+const symbolTables = {
+	'int': {size: 8, name: 'int'},
+	'void': {size: 0, name: 'void'},
+	'char': {size: 1, name: 'char'},
+	'float': {size: 8, name: 'float'},
+	'array_of_char_8': {size: 8, name: 'array', subtype: 'char'},
+}

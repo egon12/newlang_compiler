@@ -48,6 +48,19 @@ const forNode = [
 			},
 			{
 				type: 'VariableDefinition',
+				name: 'astr',
+				value: { 
+					type: 'ArrayExpression', 
+					values: [
+						{ type: 'Number', value: 1, },
+						{ type: 'Number', value: 2, },
+						{ type: 'Number', value: 3, },
+						{ type: 'Number', value: 4, },
+					],
+				},
+			},
+			{
+				type: 'VariableDefinition',
 				name: 'index',
 				value: { type: 'Number', value: '7' },
 			},

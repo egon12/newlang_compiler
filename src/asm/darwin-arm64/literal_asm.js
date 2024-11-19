@@ -14,7 +14,7 @@ class Generator {
 
 	#fastReturn = false
 
-	#inFunction = ''
+	#currentFunction = ''
 
 	#numIfStatement = 1
 	#numForStatement = 0
@@ -52,7 +52,7 @@ class Generator {
 		const stackSize = this.#collectStackVar(node)
 
 		this.#fastReturn = false
-		this.#inFunction = node
+		this.#currentFunction = node
 		this.#numIfStatement = 1
 		this.#numForStatement = 0
 
@@ -127,7 +127,7 @@ class Generator {
 		this.#fastReturn = true
 		let result = ''
 		result += this.#genExpression(node.value, 'x0')
-		result += '\tb ' + this.#inFunction.namespace + '.' + this.#inFunction.name + '.return\n'
+		result += '\tb ' + this.#currentFunction.namespace + '.' + this.#currentFunction.name + '.return\n'
 		return result
 	}
 
@@ -205,7 +205,7 @@ ${exitLabel}:
 	}
 
 	#genForLabels() {
-		const { namespace, name } = this.#inFunction
+		const { namespace, name } = this.#currentFunction
 		const num = this.#numForStatement
 		const forLabel = namespace + '.' + name + '.for' + num;
 		const exitLabel = forLabel + '.exit'
@@ -213,7 +213,7 @@ ${exitLabel}:
 	}
 
 	#genIfLabels() {
-		const { namespace, name } = this.#inFunction
+		const { namespace, name } = this.#currentFunction
 		const num = this.#numIfStatement
 		const trueLabel = namespace + '.' + name + '.if' + num + '.true'
 		this.#numIfStatement++
@@ -241,6 +241,14 @@ ${exitLabel}:
 		}
 		if (type == 'Literal') {
 			return this.#genLiteral(value, reg)
+		}
+		if (type == 'ArrayExpression') {
+			// TODO a little bit confused with this array expression
+			var result = ''
+			for (let i = 0; i < node.values.length; i++) {
+				result += this.#genExpression(node.values[i], 'x0+' + i * 8)
+			}
+			return result
 		}
 		throw new Error('Unknown expression type: ' + node.type)
 	}
@@ -336,7 +344,7 @@ ${exitLabel}:
 	#collectVarStackChild(node, stackSize) {
 		for (let i = 0; i < node.body.length; i++) {
 			if (node.body[i].type == 'VariableDefinition') {
-				stackSize += 8
+				stackSize += this.#countVarStackSize(node.body[i]) 
 				this.#stackVar[node.body[i].name] = '[x29, #-' + stackSize + ']'
 				continue
 			}
@@ -346,6 +354,21 @@ ${exitLabel}:
 			}
 		}
 		return stackSize
+	}
+
+	#countVarStackSize(node) {
+		// TODO find a way to count stack's variable size
+		if (node.type == "ArrayExpression") {
+			if (node.values.length == 0) {
+				return 0
+			}
+
+			// TODO must check if number of literal
+			var itemLength = 8;
+			return itemLength * node.values.length
+		}
+		
+		return 8
 	}
 
 }
